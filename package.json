@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
+    "dat.gui": "dataarts/dat.gui",
     "stats.js": "^0.17.0"
   },
   "devDependencies": {
