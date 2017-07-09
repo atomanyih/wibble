@@ -6,7 +6,7 @@ import Stats from 'stats.js'
 import withGUI from './gui';
 
 const stats = new Stats();
-stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
 document.body.appendChild(stats.dom);
 
 let frames = [];
@@ -81,12 +81,20 @@ class App extends React.Component {
     const {canvas, video} = this.refs;
     const ctx = canvas.getContext('2d');
 
+    const ctx2 = this.refs.intermediateCanvas.getContext('2d')
+
+    const record = () => {
+      ctx2.drawImage(video, 0, 0, imageWidth, imageHeight);
+
+      const frame = ctx2.getImageData(0, 0, imageWidth, imageHeight);
+      frames.unshift(frame);
+      frames = frames.slice(0, this.props.frameDelay * (numStripes + 10));
+
+      requestAnimationFrame(record);
+    };
+
     const draw = () => {
       stats.begin();
-      ctx.drawImage(video, 0, 0, imageWidth, imageHeight);
-
-      const frame = ctx.getImageData(0, 0, imageWidth, imageHeight);
-      frames.unshift(frame);
 
       if (this.props.pixel) {
         const generatedFrame = this.methods.generateFrame(frames, ctx);
@@ -101,13 +109,12 @@ class App extends React.Component {
         }
       }
 
-      frames = frames.slice(0, this.props.frameDelay * (numStripes + 10));
-
       stats.end();
 
       requestAnimationFrame(draw);
     };
 
+    record();
     draw();
   }
 
@@ -118,10 +125,11 @@ class App extends React.Component {
   render() {
     return (
       <div className="app">
+        <canvas style={{display: 'none'}} ref="intermediateCanvas" width={imageWidth} height={imageHeight}/>
         <canvas ref="canvas" width={imageWidth} height={imageHeight}/>
         <video muted autoPlay playsInline loop controls ref="video"
           // src="train.mp4"/>
-               src="snake.MOV"/>
+               src="bigbang.MOV"/>
       </div>
     );
   }
