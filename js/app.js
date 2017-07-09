@@ -48,26 +48,31 @@ class App extends React.Component {
         for (let yOffset = 0; yOffset < sliceHeight; yOffset++) {
           let y = ySlice + yOffset;
 
-          if( y >= destFrame.data.height) {
+          if (y >= destFrame.data.height) {
             continue;
           }
           for (let x = 0; x < imageWidth; x++) {
 
             let pixelIndex = y * imageWidth + x;
 
-            if (pixelIndex % this.props.screen === 0) {
-              transferPixel(sourceFrame, destFrame, x, y,  x, y);
-              continue;
-            }
+            const transformIndex = pixelIndex % this.props.screen;
 
-            transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y)
+            if (transformIndex === 0) {
+              transferPixel(sourceFrame, destFrame, x, y, x, y);
+            } else if (transformIndex === 1) {
+              transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y)
+            } else if (transformIndex === 2) {
+              transferPixel(sourceFrame, destFrame, x, y, x, imageHeight - y);
+            } else {
+              transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, imageHeight - y);
+            }
           }
         }
       }
 
       return destFrame;
     }
-  }
+  };
 
   componentDidMount() {
 
@@ -137,8 +142,9 @@ class App extends React.Component {
 
 const EnhancedApp = withGUI(
   {name: 'playbackRate', initialValue: 0.5, options: [0, 1, 0.05]},
-  {name: 'screen', initialValue: 2, options: [2, 5, 1]},
+  {name: 'screen', initialValue: 2, options: [[2, 4]]},
   {name: 'frameDelay', initialValue: 1, options: [1, 10, 1]},
+  {name: 'imgOffset', initialValue: 0, options: [-800, 0, 25]},
   {name: 'pixel', initialValue: true, options: []}
 )(App);
 
