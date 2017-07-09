@@ -23,7 +23,7 @@ const withGUI = (...controls) => Wrapped =>
 
     render() {
       return (
-        <Wrapped {...this.state}/>
+        <Wrapped {...this.state} {...this.props}/>
       )
     }
   };

@@ -31,6 +31,44 @@ function transferPixel(src, dest, x0, y0, x1, y1) {
   dest.data[destIndex * 4 + 3] = src.data[srcIndex * 4 + 3];
 }
 
+const drawingMethods = {
+  mirror(sourceFrame, destFrame, x, y) {
+    if (x % 2 === 0) {
+      transferPixel(sourceFrame, destFrame, x, y, x, y);
+    } else {
+      transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y)
+    }
+  },
+  screen(sourceFrame, destFrame, x, y) {
+    if (x % 4 === 0) {
+      transferPixel(sourceFrame, destFrame, x, y, x, y);
+    } else if (x % 4 === 1) {
+      transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y)
+
+    } else if (x % 4 === 2) {
+      transferPixel(sourceFrame, destFrame, x, y, x, imageHeight - y);
+
+    } else {
+      transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, imageHeight - y);
+    }
+  },
+  dither(sourceFrame, destFrame, x, y) {
+    if (y % 2 === 0) {
+      if (x % 2 === 0) {
+        transferPixel(sourceFrame, destFrame, x, y, x, y);
+      } else {
+        transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y)
+      }
+    } else {
+      if (x % 2 === 0) {
+        transferPixel(sourceFrame, destFrame, x, y, x, imageHeight - y);
+      } else {
+        transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, imageHeight - y);
+      }
+    }
+  }
+};
+
 class App extends React.Component {
   methods = {
     generateFrame: (frames, ctx) => {
@@ -52,20 +90,7 @@ class App extends React.Component {
             continue;
           }
           for (let x = 0; x < imageWidth; x++) {
-
-            let pixelIndex = y * imageWidth + x;
-
-            const transformIndex = pixelIndex % this.props.screen;
-
-            if (transformIndex === 0) {
-              transferPixel(sourceFrame, destFrame, x, y, x, y);
-            } else if (transformIndex === 1) {
-              transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y)
-            } else if (transformIndex === 2) {
-              transferPixel(sourceFrame, destFrame, x, y, x, imageHeight - y);
-            } else {
-              transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, imageHeight - y);
-            }
+            this.drawTheThing(sourceFrame, destFrame, x, y)
           }
         }
       }
@@ -75,6 +100,7 @@ class App extends React.Component {
   };
 
   componentDidMount() {
+    this.drawTheThing = drawingMethods[this.props.drawingMethod];
 
     // navigator.getUserMedia({video: true, audio: true}, function(localMediaStream) {
     //   var video = document.querySelector('video');
@@ -124,7 +150,8 @@ class App extends React.Component {
   }
 
   componentDidUpdate() {
-    this.refs.video.playbackRate = this.props.playbackRate
+    this.refs.video.playbackRate = this.props.playbackRate;
+    this.drawTheThing = drawingMethods[this.props.drawingMethod];
   }
 
   render() {
@@ -132,20 +159,18 @@ class App extends React.Component {
       <div className="app">
         <canvas style={{display: 'none'}} ref="intermediateCanvas" width={imageWidth} height={imageHeight}/>
         <canvas ref="canvas" width={imageWidth} height={imageHeight}/>
-        <video muted autoPlay playsInline loop controls ref="video"
-          // src="train.mp4"/>
-               src="bigbang.MOV"/>
+        <video muted autoPlay playsInline loop controls ref="video" crossOrigin="anonymous"
+               src="https://s3.us-east-2.amazonaws.com/atomanyih.github.io/bigbang.MOV"/>
       </div>
     );
   }
 }
 
 const EnhancedApp = withGUI(
-  {name: 'playbackRate', initialValue: 0.5, options: [0, 1, 0.05]},
-  {name: 'screen', initialValue: 2, options: [[2, 4]]},
-  {name: 'frameDelay', initialValue: 1, options: [1, 10, 1]},
+  {name: 'playbackRate', initialValue: 0.3, options: [0, 1, 0.05]},
+  {name: 'drawingMethod', initialValue: 'mirror', options: [['mirror', 'screen', 'dither']]},
   {name: 'imgOffset', initialValue: 0, options: [-800, 0, 25]},
   {name: 'pixel', initialValue: true, options: []}
 )(App);
 
-ReactDOM.render(<EnhancedApp />, document.getElementById('root'));
+ReactDOM.render(<EnhancedApp frameDelay={1}/>, document.getElementById('root'));
