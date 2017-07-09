@@ -168,7 +168,7 @@ class App extends React.Component {
 
 const EnhancedApp = withGUI(
   {name: 'playbackRate', initialValue: 0.3, options: [0, 1, 0.05]},
-  {name: 'drawingMethod', initialValue: 'mirror', options: [['mirror', 'screen', 'dither']]},
+  {name: 'drawingMethod', initialValue: 'screen', options: [['mirror', 'screen', 'dither']]},
   {name: 'imgOffset', initialValue: 0, options: [-800, 0, 25]},
   {name: 'pixel', initialValue: true, options: []}
 )(App);
