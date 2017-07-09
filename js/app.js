@@ -11,8 +11,6 @@ document.body.appendChild(stats.dom);
 
 let frames = [];
 
-const frameDelay = 1;
-
 const numStripes = 240;
 
 
@@ -21,38 +19,65 @@ const imageHeight = 240 * 4;
 
 const sliceHeight = Math.floor(imageHeight / numStripes);
 
-function generateFrame(frames, ctx) {
-  const destFrame = ctx.createImageData(frames[0]);
-  destFrame.data.set(frames[0].data);
+// const mask = [true, true, true, false, false];
 
-  for (let i = 0; i < numStripes; i++) {
-    let ySlice = sliceHeight * i;
-    let sourceFrame = frames[i * frameDelay];
+function transferPixel(src, dest, x0, y0, x1, y1) {
+  const srcIndex = y0 * imageWidth + x0;
+  const destIndex = y1 * imageWidth + x1;
 
-    if (!sourceFrame) {
-      break
-    }
-
-    for (let yOffset = 0; yOffset < sliceHeight; yOffset++) {
-      for (let x = 0; x < imageWidth; x++) {
-
-        let y = ySlice + yOffset;
-
-        let pixelIndex = y * imageWidth + x; // putting x*2  gets cool interlacing
-
-        destFrame.data[pixelIndex * 4 + 0] = sourceFrame.data[pixelIndex * 4 + 0];
-        destFrame.data[pixelIndex * 4 + 1] = sourceFrame.data[pixelIndex * 4 + 1];
-        destFrame.data[pixelIndex * 4 + 2] = sourceFrame.data[pixelIndex * 4 + 2];
-        destFrame.data[pixelIndex * 4 + 3] = sourceFrame.data[pixelIndex * 4 + 3];
-      }
-    }
-  }
-
-  return destFrame;
+  dest.data[destIndex * 4 + 0] = src.data[srcIndex * 4 + 0];
+  dest.data[destIndex * 4 + 1] = src.data[srcIndex * 4 + 1];
+  dest.data[destIndex * 4 + 2] = src.data[srcIndex * 4 + 2];
+  dest.data[destIndex * 4 + 3] = src.data[srcIndex * 4 + 3];
 }
 
 class App extends React.Component {
+  methods = {
+    generateFrame: (frames, ctx) => {
+      const destFrame = ctx.createImageData(frames[0]);
+      // destFrame.data.set(frames[0].data);
+
+      for (let i = 0; i < numStripes; i++) {
+        let ySlice = sliceHeight * i;
+        let sourceFrame = frames[i * this.props.frameDelay];
+
+        if (!sourceFrame) {
+          break
+        }
+
+        for (let yOffset = 0; yOffset < sliceHeight; yOffset++) {
+          let y = ySlice + yOffset;
+
+          if( y >= destFrame.data.height) {
+            continue;
+          }
+          for (let x = 0; x < imageWidth; x++) {
+
+            let pixelIndex = y * imageWidth + x;
+
+            if (pixelIndex % this.props.screen === 0) {
+              transferPixel(sourceFrame, destFrame, x, y,  x, y);
+              continue;
+            }
+
+            transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y)
+          }
+        }
+      }
+
+      return destFrame;
+    }
+  }
+
   componentDidMount() {
+
+    // navigator.getUserMedia({video: true, audio: true}, function(localMediaStream) {
+    //   var video = document.querySelector('video');
+    //   video.src = window.URL.createObjectURL(localMediaStream);
+    // }, () => {});
+
+    this.refs.video.playbackRate = this.props.playbackRate
+
     const {canvas, video} = this.refs;
     const ctx = canvas.getContext('2d');
 
@@ -63,20 +88,20 @@ class App extends React.Component {
       const frame = ctx.getImageData(0, 0, imageWidth, imageHeight);
       frames.unshift(frame);
 
-      if(this.props.pixel) {
-        const generatedFrame = generateFrame(frames, ctx);
+      if (this.props.pixel) {
+        const generatedFrame = this.methods.generateFrame(frames, ctx);
         ctx.putImageData(generatedFrame, 0, 0);
       } else {
-        for(let i = 0; i < numStripes; i++) {
-          const frame2 = frames[i * frameDelay];
+        for (let i = 0; i < numStripes; i++) {
+          const frame2 = frames[i * this.props.frameDelay];
 
-          if(frame2) {
+          if (frame2) {
             ctx.putImageData(frame2, 0, 0, 0, sliceHeight * i, imageWidth, sliceHeight + 1);
           }
         }
       }
 
-      frames = frames.slice(0, frameDelay * (numStripes + 10));
+      frames = frames.slice(0, this.props.frameDelay * (numStripes + 10));
 
       stats.end();
 
@@ -93,17 +118,19 @@ class App extends React.Component {
   render() {
     return (
       <div className="app">
-        <canvas ref="canvas" width={2000} height={1000}/>
+        <canvas ref="canvas" width={imageWidth} height={imageHeight}/>
         <video muted autoPlay playsInline loop controls ref="video"
-               // src="train.mp4"/>
-               src="video.MOV"/>
+          // src="train.mp4"/>
+               src="snake.MOV"/>
       </div>
     );
   }
 }
 
 const EnhancedApp = withGUI(
-  {name: 'playbackRate', initialValue: 1, options: [0, 1]},
+  {name: 'playbackRate', initialValue: 0.5, options: [0, 1, 0.05]},
+  {name: 'screen', initialValue: 2, options: [2, 5, 1]},
+  {name: 'frameDelay', initialValue: 1, options: [1, 10, 1]},
   {name: 'pixel', initialValue: true, options: []}
 )(App);
 
