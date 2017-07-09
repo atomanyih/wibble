@@ -31,6 +31,10 @@ gulp.task('build-sass', function () {
     .pipe(gulp.dest('./dist'));
 });
 
+gulp.task('build-html', function() {
+  return gulp.src('index.html')
+    .pipe(gulp.dest('./dist'))
+});
 
 gulp.task('setup-watchers', function(callback) {
   process.env.WEBPACK_WATCH = true;
@@ -39,8 +43,8 @@ gulp.task('setup-watchers', function(callback) {
   callback();
 });
 
-gulp.task('webserver', ['build-js', 'build-sass'], function() {
-  connect.server();
+gulp.task('webserver', ['build-js', 'build-sass', 'build-html'], function () {
+  connect.server({root: 'dist'});
 });
 
 gulp.task('default', ['setup-watchers', 'webserver']);
@@ -65,4 +69,9 @@ gulp.task('jasmine', function() {
     }))
     .pipe(plugins.jasmineBrowser.specRunner())
     .pipe(plugins.jasmineBrowser.server(plugin.whenReady));
+});
+
+gulp.task('build-gh-pages', ['build-js', 'build-sass', 'build-html'], function () {
+  return gulp.src(['dist/*'])
+    .pipe(gulp.dest('docs/'))
 });
