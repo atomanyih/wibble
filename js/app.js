@@ -21,6 +21,9 @@ const sliceHeight = Math.floor(imageHeight / numStripes);
 
 // const mask = [true, true, true, false, false];
 
+const weave1 = [0, 0, 0, 1];
+const weave2 = [2, 3, 2, 2];
+
 function transferPixel(src, dest, x0, y0, x1, y1) {
   const srcIndex = y0 * imageWidth + x0;
   const destIndex = y1 * imageWidth + x1;
@@ -40,6 +43,8 @@ const drawingMethods = {
     }
   },
   screen(sourceFrame, destFrame, x, y) {
+    // the source and dest indices are mixed up but it's cool anyway
+
     if (x % 4 === 0) {
       transferPixel(sourceFrame, destFrame, x, y, x, y);
     } else if (x % 4 === 1) {
@@ -66,6 +71,29 @@ const drawingMethods = {
         transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, imageHeight - y);
       }
     }
+  },
+  weave(sourceFrame, destFrame, x, y) {
+    const scaledY = Math.floor(y / 5)
+    const scaledX = Math.floor(x / 5)
+
+    const choice = (scaledY % 2 === 0 ? weave1 : weave2)[scaledX % 4];
+
+    // switching 1 and 2 is REALLY slow for some reason
+
+    if(choice === 0) {
+      transferPixel(sourceFrame, destFrame, x, y, x, y);
+
+    } else if(choice === 1) {
+      transferPixel(sourceFrame, destFrame, imageWidth - x, y, x, y)
+
+    } else if(choice === 2) {
+      transferPixel(sourceFrame, destFrame, x, imageHeight - y, x, y);
+
+    } else if(choice === 3) {
+      transferPixel(sourceFrame, destFrame, imageWidth - x, imageHeight - y, x, y);
+
+    }
+
   }
 };
 
@@ -167,8 +195,12 @@ class App extends React.Component {
 }
 
 const EnhancedApp = withGUI(
+  {
+    name: 'drawingMethod',
+    initialValue: window.location.hash.slice(1) || 'screen',
+    options: [Object.keys(drawingMethods)]
+  },
   {name: 'playbackRate', initialValue: 0.3, options: [0, 1, 0.05]},
-  {name: 'drawingMethod', initialValue: 'screen', options: [['mirror', 'screen', 'dither']]},
   {name: 'imgOffset', initialValue: 0, options: [-800, 0, 25]},
   {name: 'pixel', initialValue: true, options: []}
 )(App);
