@@ -10,6 +10,7 @@ const withGUI = (...controls) => Wrapped =>
 
     componentDidMount() {
       this.gui = new dat.GUI();
+      dat.GUI.toggleHide();
 
       controls.forEach((control) => {
         this.gui.add(this.state, control.name, ...control.options).onChange((value) => {
