@@ -200,6 +200,7 @@ class App extends React.Component {
         <canvas ref="canvas" width={imageWidth} height={imageHeight}/>
         <video muted autoPlay playsInline loop controls ref="video" crossOrigin="anonymous"
                src="https://s3.us-east-2.amazonaws.com/atomanyih.github.io/bigbang.MOV"/>
+        <audio src="https://s3.us-east-2.amazonaws.com/atomanyih.github.io/Mark+Deutsch+-+Fool+-+Bazantar-Sitar+-+02+The+Painted+Bird.mp3" autoPlay/>
       </div>
     );
   }
