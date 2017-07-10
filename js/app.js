@@ -32,18 +32,43 @@ function transferPixel(src, dest, x0, y0, x1, y1) {
 }
 
 const drawingMethods = {
-  standard(sourceFrame, destFrame, x, y) {
+  standard(frames, destFrame, x, y) {
+    const sourceFrame = frames[Math.floor(y/ sliceHeight)];
+    if(!sourceFrame) {
+      return;
+    }
     transferPixel(sourceFrame, destFrame, x, y, x, y);
-    // transferPixel(sourceFrame, destFrame, Math.floor((x + imageWidth/2)/2), Math.floor((y + imageHeight/2)/2), x, y);
   },
-  mirror(sourceFrame, destFrame, x, y) {
+  ghost(frames, destFrame, x, y) {
+    if(x % 2 === 0) {
+      const sourceFrame = frames[Math.floor(y/ sliceHeight)];
+      if(!sourceFrame) {
+        return;
+      }
+
+      transferPixel(sourceFrame, destFrame, x, y, x, y);
+    } else {
+      transferPixel(frames[0], destFrame, x, y, x, y);
+    }
+
+  },
+  mirror(frames, destFrame, x, y) {
+    const sourceFrame = frames[Math.floor(y/ sliceHeight)];
+    if(!sourceFrame) {
+      return;
+    }
+
     if (x % 2 === 0) {
       transferPixel(sourceFrame, destFrame, x, y, x, y);
     } else {
       transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y)
     }
   },
-  screen(sourceFrame, destFrame, x, y) {
+  screen(frames, destFrame, x, y) {
+    const sourceFrame = frames[Math.floor(y/ sliceHeight)];
+    if(!sourceFrame) {
+      return;
+    }
     // the source and dest indices are mixed up but it's cool anyway
 
     const xp = Math.floor(x / this.props.imgScale);
@@ -65,7 +90,12 @@ const drawingMethods = {
       transferPixel(sourceFrame, destFrame, xp, yp, imageWidth - x, imageHeight - y);
     }
   },
-  dither(sourceFrame, destFrame, x, y) {
+  dither(frames, destFrame, x, y) {
+    const sourceFrame = frames[Math.floor(y/ sliceHeight)];
+    if(!sourceFrame) {
+      return;
+    }
+
     if (y % 2 === 0) {
       if (x % 2 === 0) {
         transferPixel(sourceFrame, destFrame, x, y, x, y);
@@ -80,7 +110,12 @@ const drawingMethods = {
       }
     }
   },
-  weave(sourceFrame, destFrame, x, y) {
+  weave(frames, destFrame, x, y) {
+    const sourceFrame = frames[Math.floor(y/ sliceHeight)];
+    if(!sourceFrame) {
+      return;
+    }
+
     const scaledY = Math.floor(y / this.props.screenScale)
     const scaledX = Math.floor(x / this.props.screenScale)
 
@@ -109,25 +144,10 @@ class App extends React.Component {
   methods = {
     generateFrame: (frames, ctx) => {
       const destFrame = ctx.createImageData(frames[0]);
-      // destFrame.data.set(frames[0].data);
 
-      for (let i = 0; i < numStripes; i++) {
-        let ySlice = sliceHeight * i;
-        let sourceFrame = frames[i * this.props.frameDelay];
-
-        if (!sourceFrame) {
-          break
-        }
-
-        for (let yOffset = 0; yOffset < sliceHeight; yOffset++) {
-          let y = ySlice + yOffset;
-
-          if (y >= destFrame.data.height) {
-            continue;
-          }
-          for (let x = 0; x < imageWidth; x++) {
-            this.drawTheThing(sourceFrame, destFrame, x, y)
-          }
+      for (let y = 0; y < imageHeight; y++) {
+        for (let x = 0; x < imageWidth; x++) {
+          this.drawTheThing(frames, destFrame, x, y)
         }
       }
 
