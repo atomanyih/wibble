@@ -35,6 +35,10 @@ function transferPixel(src, dest, x0, y0, x1, y1) {
 }
 
 const drawingMethods = {
+  standard(sourceFrame, destFrame, x, y) {
+    transferPixel(sourceFrame, destFrame, x, y, x, y);
+    // transferPixel(sourceFrame, destFrame, Math.floor((x + imageWidth/2)/2), Math.floor((y + imageHeight/2)/2), x, y);
+  },
   mirror(sourceFrame, destFrame, x, y) {
     if (x % 2 === 0) {
       transferPixel(sourceFrame, destFrame, x, y, x, y);
@@ -45,16 +49,23 @@ const drawingMethods = {
   screen(sourceFrame, destFrame, x, y) {
     // the source and dest indices are mixed up but it's cool anyway
 
-    if (x % 4 === 0) {
-      transferPixel(sourceFrame, destFrame, x, y, x, y);
-    } else if (x % 4 === 1) {
-      transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y)
+    const xp = Math.floor(x / this.props.imgScale);
+    const yp = Math.floor(y / this.props.imgScale);
 
-    } else if (x % 4 === 2) {
-      transferPixel(sourceFrame, destFrame, x, y, x, imageHeight - y);
+    // switching source and dest coordinates makes it chug
+    // getting from multiple source locations at the same time is SLOW ??
+
+    const screenIndex = Math.floor(x / this.props.screenScale) % 4;
+
+    if (screenIndex === 0) {
+      transferPixel(sourceFrame, destFrame, xp, yp, x, y);
+    } else if (screenIndex === 1) {
+      transferPixel(sourceFrame, destFrame, xp, yp, imageWidth - x, y);
+    } else if (screenIndex === 2) {
+      transferPixel(sourceFrame, destFrame, xp, yp, x, imageHeight - y);
 
     } else {
-      transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, imageHeight - y);
+      transferPixel(sourceFrame, destFrame, xp, yp, imageWidth - x, imageHeight - y);
     }
   },
   dither(sourceFrame, destFrame, x, y) {
@@ -73,8 +84,8 @@ const drawingMethods = {
     }
   },
   weave(sourceFrame, destFrame, x, y) {
-    const scaledY = Math.floor(y / 5)
-    const scaledX = Math.floor(x / 5)
+    const scaledY = Math.floor(y / this.props.screenScale)
+    const scaledX = Math.floor(x / this.props.screenScale)
 
     const choice = (scaledY % 2 === 0 ? weave1 : weave2)[scaledX % 4];
 
@@ -83,14 +94,14 @@ const drawingMethods = {
     if(choice === 0) {
       transferPixel(sourceFrame, destFrame, x, y, x, y);
 
-    } else if(choice === 1) {
-      transferPixel(sourceFrame, destFrame, imageWidth - x, y, x, y)
-
     } else if(choice === 2) {
-      transferPixel(sourceFrame, destFrame, x, imageHeight - y, x, y);
+      transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y)
+
+    } else if(choice === 1) {
+      transferPixel(sourceFrame, destFrame, x, y, x, imageHeight - y);
 
     } else if(choice === 3) {
-      transferPixel(sourceFrame, destFrame, imageWidth - x, imageHeight - y, x, y);
+      transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, imageHeight - y);
 
     }
 
@@ -202,7 +213,9 @@ const EnhancedApp = withGUI(
   },
   {name: 'playbackRate', initialValue: 0.3, options: [0, 1, 0.05]},
   {name: 'imgOffset', initialValue: 0, options: [-800, 0, 25]},
-  {name: 'pixel', initialValue: true, options: []}
+  {name: 'pixel', initialValue: true, options: []},
+  {name: 'screenScale', initialValue: 3, options: [1, 20, 1]},
+  {name: 'imgScale', initialValue: 1, options: [1, 10, 0.01]},
 )(App);
 
 ReactDOM.render(<EnhancedApp frameDelay={1}/>, document.getElementById('root'));
