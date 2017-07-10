@@ -4,10 +4,7 @@ const ReactDOM = require('react-dom');
 import Stats from 'stats.js'
 
 import withGUI from './gui';
-
-const stats = new Stats();
-stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
-document.body.appendChild(stats.dom);
+import withStats from './with_stats';
 
 let frames = [];
 
@@ -164,7 +161,7 @@ class App extends React.Component {
     };
 
     const draw = () => {
-      stats.begin();
+      this.props.beginStats();
 
       if (this.props.pixel) {
         const generatedFrame = this.methods.generateFrame(frames, ctx);
@@ -179,7 +176,7 @@ class App extends React.Component {
         }
       }
 
-      stats.end();
+      this.props.endStats();
 
       requestAnimationFrame(draw);
     };
@@ -206,7 +203,7 @@ class App extends React.Component {
   }
 }
 
-const EnhancedApp = withGUI(
+const EnhancedApp = withStats(withGUI(
   {
     name: 'drawingMethod',
     initialValue: window.location.hash.slice(1) || 'screen',
@@ -217,6 +214,6 @@ const EnhancedApp = withGUI(
   {name: 'pixel', initialValue: true, options: []},
   {name: 'screenScale', initialValue: 3, options: [1, 20, 1]},
   {name: 'imgScale', initialValue: 1, options: [1, 10, 0.01]},
-)(App);
+)(App));
 
 ReactDOM.render(<EnhancedApp frameDelay={1}/>, document.getElementById('root'));
