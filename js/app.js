@@ -214,7 +214,7 @@ class App extends React.Component {
     return (
       <div className="app">
         <canvas style={{display: 'none'}} ref="intermediateCanvas" width={imageWidth} height={imageHeight}/>
-        <canvas ref="canvas" width={imageWidth} height={imageHeight}/>
+        <canvas id="main-canvas" ref="canvas" width={imageWidth} height={imageHeight}/>
         <video muted autoPlay playsInline loop controls ref="video" crossOrigin="anonymous"
                src="https://s3.us-east-2.amazonaws.com/atomanyih.github.io/bigbang.MOV"/>
         <audio src="https://s3.us-east-2.amazonaws.com/atomanyih.github.io/Mark+Deutsch+-+Fool+-+Bazantar-Sitar+-+02+The+Painted+Bird.mp3" autoPlay/>
