@@ -25,10 +25,10 @@ function transferPixel(src, dest, x0, y0, x1, y1) {
   const srcIndex = y0 * imageWidth + x0;
   const destIndex = y1 * imageWidth + x1;
 
-  dest.data[destIndex * 4 + 0] = src.data[srcIndex * 4 + 0];
-  dest.data[destIndex * 4 + 1] = src.data[srcIndex * 4 + 1];
-  dest.data[destIndex * 4 + 2] = src.data[srcIndex * 4 + 2];
-  dest.data[destIndex * 4 + 3] = src.data[srcIndex * 4 + 3];
+  dest[destIndex * 4 + 0] = src[srcIndex * 4 + 0];
+  dest[destIndex * 4 + 1] = src[srcIndex * 4 + 1];
+  dest[destIndex * 4 + 2] = src[srcIndex * 4 + 2];
+  dest[destIndex * 4 + 3] = src[srcIndex * 4 + 3];
 }
 
 const drawingMethods = {
@@ -127,7 +127,7 @@ const drawingMethods = {
       transferPixel(sourceFrame, destFrame, x, y, x, y);
 
     } else if(choice === 2) {
-      transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y)
+      transferPixel(sourceFrame, destFrame, x, y, imageWidth - x, y);
 
     } else if(choice === 1) {
       transferPixel(sourceFrame, destFrame, x, y, x, imageHeight - y);
@@ -143,11 +143,12 @@ const drawingMethods = {
 class App extends React.Component {
   methods = {
     generateFrame: (frames, ctx) => {
-      const destFrame = ctx.createImageData(frames[0]);
+      const destFrame = ctx.createImageData(imageWidth, imageHeight);
+      const destData = destFrame.data;
 
       for (let y = 0; y < imageHeight; y++) {
         for (let x = 0; x < imageWidth; x++) {
-          this.drawTheThing(frames, destFrame, x, y)
+          this.drawTheThing(frames, destData, x, y)
         }
       }
 
@@ -174,7 +175,7 @@ class App extends React.Component {
       ctx2.drawImage(video, 0, 0, imageWidth, imageHeight);
 
       const frame = ctx2.getImageData(0, 0, imageWidth, imageHeight);
-      frames.unshift(frame);
+      frames.unshift(frame.data);
       frames = frames.slice(0, this.props.frameDelay * (numStripes + 10));
 
       requestAnimationFrame(record);
