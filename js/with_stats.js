@@ -12,11 +12,18 @@ const withStats = Wrapped => class WithStats extends React.Component {
   };
 
   componentDidMount() {
-    // const stats = new Stats();
-    // stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
-    // document.body.appendChild(stats.dom);
-    //
-    // this.stats = stats;
+    const stats = new Stats();
+    stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+
+    this.stats = stats;
+  }
+
+  componentDidUpdate(prevProps) {
+    if(this.props.statsOpen && !prevProps.statsOpen) {
+      this.statsDom = document.body.appendChild(this.stats.dom);
+    } else if (!this.props.statsOpen && prevProps.statsOpen) {
+      document.body.removeChild(this.statsDom)
+    }
   }
 
   render() {

@@ -5,6 +5,7 @@
   "main": "app.js",
   "dependencies": {
     "dat.gui": "dataarts/dat.gui",
+    "recompose": "^0.24.0",
     "stats.js": "^0.17.0"
   },
   "devDependencies": {
